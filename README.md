@@ -11,7 +11,7 @@
 
 # BI Analytics Platform
 
-Plataforma completa de **Business Intelligence e Analytics** com frontend React, backend FastAPI, pipeline ETL automatizado e Metabase integrado — tudo orquestrado com Docker.
+Plataforma completa de **Business Intelligence e Analytics** com frontend React, backend FastAPI, pipeline ETL automatizado e Metabase integrado, tudo orquestrado com Docker.
 
 ## 📋 Sumário
 
