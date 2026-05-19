@@ -11,6 +11,9 @@ on:
     paths:
       - "backend/**"
 
+env:
+  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
+
 jobs:
   test:
     runs-on: ubuntu-latest
@@ -56,6 +59,15 @@ jobs:
           pip install -r requirements.txt
           pip install pytest pytest-cov
 
+      - name: Initialize database tables
+        working-directory: ./backend
+        env:
+          DATABASE_URL: postgresql://postgres:postgres@localhost:5432/bi_platform
+          REDIS_HOST: localhost
+          REDIS_PORT: 6379
+        run: |
+          python -c "from app.database import init_db; init_db(); print('Database tables created successfully')"
+
       - name: Run tests
         working-directory: ./backend
         env:
@@ -66,6 +78,7 @@ jobs:
           pytest tests/ -v --cov=app --cov-report=xml --cov-report=term
 
       - name: Upload coverage
+        if: always()
         uses: codecov/codecov-action@v3
         with:
           file: ./backend/coverage.xml
