@@ -9,11 +9,8 @@ on:
       - "docker-compose.yml"
       - ".github/workflows/deploy.yml"
 
-env:
-  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
-
 jobs:
-  deploy:
+  build:
     runs-on: ubuntu-latest
 
     steps:
@@ -22,46 +19,20 @@ jobs:
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
 
-      - name: Login to DockerHub
-        if: ${{ secrets.DOCKER_USERNAME != '' && secrets.DOCKER_PASSWORD != '' }}
-        uses: docker/login-action@v3
-        with:
-          username: ${{ secrets.DOCKER_USERNAME }}
-          password: ${{ secrets.DOCKER_PASSWORD }}
-
-      - name: Build and push backend
-        if: ${{ secrets.DOCKER_USERNAME != '' && secrets.DOCKER_PASSWORD != '' }}
+      - name: Build backend
         uses: docker/build-push-action@v5
         with:
           context: ./backend
-          push: true
-          tags: |
-            ${{ secrets.DOCKER_USERNAME }}/bi-backend:latest
-            ${{ secrets.DOCKER_USERNAME }}/bi-backend:${{ github.sha }}
+          push: false
+          tags: bi-backend:latest
           cache-from: type=gha
           cache-to: type=gha,mode=max
 
-      - name: Build and push frontend
-        if: ${{ secrets.DOCKER_USERNAME != '' && secrets.DOCKER_PASSWORD != '' }}
+      - name: Build frontend
         uses: docker/build-push-action@v5
         with:
           context: ./frontend
-          push: true
-          tags: |
-            ${{ secrets.DOCKER_USERNAME }}/bi-frontend:latest
-            ${{ secrets.DOCKER_USERNAME }}/bi-frontend:${{ github.sha }}
+          push: false
+          tags: bi-frontend:latest
           cache-from: type=gha
           cache-to: type=gha,mode=max
-
-      - name: Deploy to server
-        if: ${{ secrets.DEPLOY_HOST != '' && secrets.DEPLOY_USER != '' && secrets.DEPLOY_KEY != '' }}
-        uses: appleboy/ssh-action@v1.0.0
-        with:
-          host: ${{ secrets.DEPLOY_HOST }}
-          username: ${{ secrets.DEPLOY_USER }}
-          key: ${{ secrets.DEPLOY_KEY }}
-          script: |
-            cd /opt/bi-platform
-            docker compose pull
-            docker compose up -d --remove-orphans
-            docker system prune -f
