@@ -1,6 +1,35 @@
+<p align="center">
+  <img src="https://img.shields.io/badge/license-MIT-blue.svg" alt="License MIT">
+  <img src="https://img.shields.io/badge/python-3.11+-blue.svg" alt="Python 3.11+">
+  <img src="https://img.shields.io/badge/node-20+-green.svg" alt="Node 20+">
+  <img src="https://img.shields.io/badge/docker-compose-2496ED?logo=docker" alt="Docker Compose">
+  <img src="https://img.shields.io/badge/React-18-61DAFB?logo=react" alt="React 18">
+  <img src="https://img.shields.io/badge/FastAPI-0.104-009688?logo=fastapi" alt="FastAPI">
+  <img src="https://img.shields.io/badge/PostgreSQL-15-4169E1?logo=postgresql" alt="PostgreSQL 15">
+  <img src="https://img.shields.io/badge/Redis-7-DC382D?logo=redis" alt="Redis 7">
+</p>
+
 # BI Analytics Platform
 
-Plataforma completa de Business Intelligence e Analytics com frontend React, backend FastAPI, pipeline ETL, e Metabase integrado — tudo orquestrado com Docker.
+Plataforma completa de **Business Intelligence e Analytics** com frontend React, backend FastAPI, pipeline ETL automatizado e Metabase integrado — tudo orquestrado com Docker.
+
+## 📋 Sumário
+
+- [Arquitetura](#arquitetura)
+- [Fluxo de Dados](#fluxo-de-dados)
+- [Tecnologias](#tecnologias)
+- [Funcionalidades](#funcionalidades)
+- [Quick Start](#quick-start)
+- [Estrutura do Projeto](#estrutura-do-projeto)
+- [Modelo de Dados](#modelo-de-dados)
+- [Endpoints da API](#endpoints-da-api)
+- [Desenvolvimento Local](#desenvolvimento-local)
+- [Metabase](#metabase)
+- [CI/CD](#cicd)
+- [Contribuindo](#contribuindo)
+- [Licença](#licença)
+
+---
 
 ## Arquitetura
 
@@ -136,9 +165,9 @@ mindmap
 
 ### Pré-requisitos
 
-- Docker e Docker Compose
-- Node.js 20+ (desenvolvimento local do frontend)
-- Python 3.11+ (desenvolvimento local do backend)
+- [Docker](https://docs.docker.com/get-docker/) e [Docker Compose](https://docs.docker.com/compose/install/)
+- Node.js 20+ (para desenvolvimento local do frontend)
+- Python 3.11+ (para desenvolvimento local do backend)
 
 ### Executando com Docker
 
@@ -149,6 +178,7 @@ docker compose up -d
 Isso inicia todos os serviços: PostgreSQL, Redis, Backend, Frontend e Metabase.
 
 **Acessar:**
+
 | Serviço | URL |
 |---|---|
 | Frontend | http://localhost:5173 |
@@ -411,79 +441,35 @@ Configure alertas no Metabase para monitorar:
 - Estoque baixo (< 5 unidades)
 - Pico de cancelamentos (>10% no dia)
 
-## Exemplos de Consultas SQL
+## CI/CD
 
-### Vendas por período
+O projeto utiliza **GitHub Actions** para:
 
-```sql
-SELECT
-    DATE(sale_date) as day,
-    SUM(final_amount) as revenue,
-    COUNT(*) as orders,
-    AVG(final_amount) as avg_ticket
-FROM sales
-WHERE status = 'completed'
-  AND sale_date >= NOW() - INTERVAL '30 days'
-GROUP BY DATE(sale_date)
-ORDER BY day;
-```
+| Workflow | Descrição |
+|---|---|
+| `python-tests.yml` | Executa testes automatizados do backend a cada push |
+| `etl-pipeline.yml` | Pipeline ETL agendado (2:00 AM UTC) |
+| `deploy.yml` | Deploy automatizado (quando configurado) |
 
-### Top clientes por receita
+## Contribuindo
 
-```sql
-SELECT
-    c.name,
-    c.email,
-    c.tier,
-    COUNT(s.id) as total_orders,
-    SUM(s.final_amount) as total_spent
-FROM customers c
-JOIN sales s ON c.id = s.customer_id
-WHERE s.status = 'completed'
-GROUP BY c.id, c.name, c.email, c.tier
-ORDER BY total_spent DESC
-LIMIT 10;
-```
+Contribuições são bem-vindas! Siga os passos abaixo:
 
-### Produtos mais vendidos
+1. **Fork** o projeto
+2. **Crie uma branch** para sua feature: `git checkout -b feature/nova-feature`
+3. **Commit** suas mudanças: `git commit -m 'feat: adiciona nova feature'`
+4. **Push** para a branch: `git push origin feature/nova-feature`
+5. Abra um **Pull Request**
 
-```sql
-SELECT
-    p.name,
-    p.category,
-    SUM(si.quantity) as units_sold,
-    SUM(si.total_price) as revenue
-FROM products p
-JOIN sale_items si ON p.id = si.product_id
-JOIN sales s ON si.sale_id = s.id
-WHERE s.status = 'completed'
-  AND s.sale_date >= NOW() - INTERVAL '30 days'
-GROUP BY p.id, p.name, p.category
-ORDER BY revenue DESC
-LIMIT 10;
-```
+### Padrões de Commit
 
-### Taxa de retenção de clientes
+- `feat:` — nova funcionalidade
+- `fix:` — correção de bug
+- `docs:` — documentação
+- `refactor:` — refatoração
+- `test:` — testes
+- `chore:` — tarefas de manutenção
 
-```sql
-WITH monthly_customers AS (
-    SELECT
-        DATE_TRUNC('month', sale_date) as month,
-        COUNT(DISTINCT customer_id) as customers
-    FROM sales
-    WHERE status = 'completed'
-    GROUP BY DATE_TRUNC('month', sale_date)
-)
-SELECT
-    current.month,
-    current.customers as current_customers,
-    previous.customers as previous_customers,
-    ROUND(
-        (current.customers::float / NULLIF(previous.customers, 0) - 1) * 100,
-        2
-    ) as retention_rate
-FROM monthly_customers current
-LEFT JOIN monthly_customers previous
-    ON current.month = previous.month + INTERVAL '1 month'
-ORDER BY current.month;
-```
+## Licença
+
+Distribuído sob a licença MIT. Veja o arquivo [LICENSE](LICENSE) para mais informações.
